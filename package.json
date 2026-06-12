@@ -1,0 +1,41 @@
+{
+  "name": "nithya-analysis-backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/server.js",
+ "scripts": {
+  "dev": "nodemon --exec ts-node src/server.ts",
+  "build": "prisma generate && tsc",
+  "start": "node dist/server.js",
+  "postinstall": "prisma generate",
+  "test": "echo \"Error: no test specified\" && exit 1"
+},
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@google/genai": "^1.34.0",
+    "@prisma/client": "^5.22.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "ffmpeg-static": "^5.3.0",
+    "fluent-ffmpeg": "^2.1.3",
+    "imagekit": "^6.0.0",
+    "multer": "^1.4.5-lts.1",
+    "pg": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/multer": "^1.4.12",
+    "@types/node": "^25.2.0",
+    "@types/pg": "^8.16.0",
+    "dotenv-cli": "^11.0.0",
+    "nodemon": "^3.1.11",
+    "prisma": "^5.22.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  }
+}

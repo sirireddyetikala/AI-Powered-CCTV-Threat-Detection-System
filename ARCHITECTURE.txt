@@ -1,0 +1,308 @@
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                    NITHYA ANALYSIS BACKEND ARCHITECTURE                      ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              FRONTEND (React)                                │
+│                        http://localhost:5173                                 │
+└────────────────────────────┬────────────────────────────────────────────────┘
+                             │
+                             │ HTTP Request (FormData with video)
+                             │
+                             ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         BACKEND API (Express)                                │
+│                        http://localhost:5005                                 │
+│                                                                              │
+│  ┌────────────────────────────────────────────────────────────────────┐    │
+│  │  SERVER.TS                                                          │    │
+│  │  • CORS middleware                                                  │    │
+│  │  • JSON parser                                                      │    │
+│  │  • Request logger                                                   │    │
+│  └───────────────────────────┬────────────────────────────────────────┘    │
+│                              │                                               │
+│                              ▼                                               │
+│  ┌────────────────────────────────────────────────────────────────────┐    │
+│  │  ROUTES (analysisRoutes.ts)                                         │    │
+│  │  POST   /getanalysis   → Upload & analyze video                    │    │
+│  │  GET    /history       → Get all analyses                          │    │
+│  │  GET    /analysis/:id  → Get specific analysis                     │    │
+│  │  DELETE /analysis/:id  → Delete analysis                           │    │
+│  └───────────────────────────┬────────────────────────────────────────┘    │
+│                              │                                               │
+│                              ▼                                               │
+│  ┌────────────────────────────────────────────────────────────────────┐    │
+│  │  MULTER MIDDLEWARE (multer.ts)                                      │    │
+│  │  • Validates video file type                                        │    │
+│  │  • Saves to uploads/ folder                                         │    │
+│  │  • Max size: 100MB                                                  │    │
+│  └───────────────────────────┬────────────────────────────────────────┘    │
+│                              │                                               │
+│                              ▼                                               │
+│  ┌────────────────────────────────────────────────────────────────────┐    │
+│  │  CONTROLLER (analysisController.ts)                                 │    │
+│  │  1. Save video metadata to database                                 │    │
+│  │  2. Call Gemini service                                             │    │
+│  │  3. Update database with results                                    │    │
+│  │  4. Return response to frontend                                     │    │
+│  └──────────────┬─────────────────────────┬───────────────────────────┘    │
+│                 │                         │                                  │
+└─────────────────┼─────────────────────────┼──────────────────────────────────┘
+                  │                         │
+                  │                         │
+        ┌─────────▼──────────┐    ┌────────▼─────────┐
+        │  GEMINI SERVICE    │    │   DATABASE       │
+        │  geminiService.ts  │    │   database.ts    │
+        │                    │    │                  │
+        └─────────┬──────────┘    └────────┬─────────┘
+                  │                        │
+                  │                        │
+        ┌─────────▼──────────┐    ┌────────▼─────────┐
+        │  GOOGLE GEMINI     │    │  POSTGRESQL      │
+        │  1.5 Flash API     │    │  nithya_analysis │
+        │                    │    │                  │
+        │  Analyzes video    │    │  analyses table  │
+        │  Returns JSON      │    │  • video info    │
+        │                    │    │  • gemini_response│
+        └────────────────────┘    │  • timestamps    │
+                                  └──────────────────┘
+
+
+═══════════════════════════════════════════════════════════════════════════════
+
+                            DATA FLOW DIAGRAM
+
+═══════════════════════════════════════════════════════════════════════════════
+
+
+USER UPLOADS VIDEO
+        │
+        │  1. Select video file in frontend
+        │
+        ▼
+┌───────────────┐
+│   FormData    │  video: File
+│               │  prompt: string (optional)
+└───────┬───────┘
+        │
+        │  2. POST request to /getanalysis
+        │
+        ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  BACKEND RECEIVES REQUEST                                        │
+│                                                                  │
+│  Step 1: Multer processes file upload                           │
+│          → Saves to: uploads/1704481200000-dance.mp4            │
+│                                                                  │
+│  Step 2: Insert record to database                              │
+│          INSERT INTO analyses                                   │
+│          (video_filename, video_path, status='pending')         │
+│          → Returns ID: 1                                        │
+│                                                                  │
+│  Step 3: Update status to 'processing'                          │
+│          UPDATE analyses SET status='processing' WHERE id=1     │
+│                                                                  │
+│  Step 4: Send video to Gemini                                   │
+│          → Read video file as base64                            │
+│          → Send to Gemini API with prompt                       │
+│          → Wait for analysis...                                 │
+│                                                                  │
+│  Step 5: Gemini returns analysis                                │
+│          {                                                      │
+│            "danceForm": "Bharatanatyam",                        │
+│            "mudras": [...],                                     │
+│            "rating": 8.5                                        │
+│          }                                                      │
+│                                                                  │
+│  Step 6: Update database with results                           │
+│          UPDATE analyses                                        │
+│          SET status='completed',                                │
+│              gemini_response='{"analysis": {...}}',             │
+│              completed_at=NOW()                                 │
+│          WHERE id=1                                             │
+│                                                                  │
+│  Step 7: Return response to frontend                            │
+│          {                                                      │
+│            "success": true,                                     │
+│            "data": { id:1, video_filename, gemini_response }    │
+│          }                                                      │
+└─────────────────────────────────────────────────────────────────┘
+        │
+        │  3. Frontend receives analysis
+        │
+        ▼
+┌───────────────┐
+│  Display to   │  • Show mudras detected
+│     USER      │  • Show rating
+│               │  • Show feedback
+└───────────────┘
+
+
+═══════════════════════════════════════════════════════════════════════════════
+
+                            FOLDER STRUCTURE
+
+═══════════════════════════════════════════════════════════════════════════════
+
+nithya-analysis-backend/
+│
+├── database/
+│   └── schema.sql                  # Database table definitions
+│
+├── src/
+│   ├── config/
+│   │   ├── database.ts            # PostgreSQL connection pool
+│   │   └── multer.ts              # File upload settings
+│   │
+│   ├── controllers/
+│   │   └── analysisController.ts  # Request handlers (business logic)
+│   │
+│   ├── middleware/
+│   │   └── errorHandler.ts        # Error handling middleware
+│   │
+│   ├── routes/
+│   │   └── analysisRoutes.ts      # API endpoint definitions
+│   │
+│   ├── services/
+│   │   └── geminiService.ts       # Gemini API integration
+│   │
+│   ├── types/
+│   │   └── index.ts               # TypeScript type definitions
+│   │
+│   └── server.ts                   # Main Express app
+│
+├── uploads/                        # Uploaded videos (auto-created)
+│
+├── .env                            # Environment variables (NEVER commit!)
+├── .gitignore                      # Git ignore rules
+├── package.json                    # Dependencies & scripts
+├── tsconfig.json                   # TypeScript config
+│
+└── Documentation/
+    ├── README.md                   # Full documentation
+    ├── SETUP_GUIDE.md             # Setup instructions
+    ├── IMPLEMENTATION_SUMMARY.md  # What was built
+    └── ARCHITECTURE.txt           # This file!
+
+
+═══════════════════════════════════════════════════════════════════════════════
+
+                        DATABASE SCHEMA VISUAL
+
+═══════════════════════════════════════════════════════════════════════════════
+
+┌─────────────────────────────────────────────────────────────────────┐
+│                         analyses TABLE                               │
+├──────────────────────┬──────────────┬────────────────────────────────┤
+│ Column               │ Type         │ Description                    │
+├──────────────────────┼──────────────┼────────────────────────────────┤
+│ id                   │ SERIAL       │ 🔑 Primary Key (auto)         │
+│ video_filename       │ VARCHAR(500) │ Original filename              │
+│ video_path           │ VARCHAR(1000)│ File location on server        │
+│ file_size            │ BIGINT       │ Size in bytes                  │
+│ mime_type            │ VARCHAR(100) │ video/mp4, etc.                │
+│ status               │ VARCHAR(50)  │ pending/processing/completed   │
+│ gemini_response      │ JSONB        │ 📊 Full AI analysis (JSON)    │
+│ error_message        │ TEXT         │ Error if failed                │
+│ created_at           │ TIMESTAMP    │ ⏰ Upload time                │
+│ updated_at           │ TIMESTAMP    │ Last modified                  │
+│ completed_at         │ TIMESTAMP    │ Analysis completion time       │
+└──────────────────────┴──────────────┴────────────────────────────────┘
+
+Indexes:
+  🚀 idx_analyses_status         → Fast filtering by status
+  🚀 idx_analyses_created_at     → Fast sorting by date  
+  🚀 idx_analyses_video_filename → Fast searching
+
+Triggers:
+  ⚡ update_analyses_updated_at  → Auto-update updated_at on changes
+
+
+═══════════════════════════════════════════════════════════════════════════════
+
+                          API ENDPOINTS MAP
+
+═══════════════════════════════════════════════════════════════════════════════
+
+┌────────────────────────────────────────────────────────────────────┐
+│  GET  http://localhost:5005/                                       │
+│  ↳ Health check - "API is running"                                 │
+└────────────────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────────────────┐
+│  GET  http://localhost:5005/health                                 │
+│  ↳ Database health check                                           │
+└────────────────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────────────────┐
+│  POST http://localhost:5005/getanalysis                            │
+│  ↳ Upload video & get AI analysis                                  │
+│  📤 Body: multipart/form-data                                      │
+│     • video: File (required)                                       │
+│     • prompt: string (optional)                                    │
+│  📥 Response: Analysis object with Gemini results                  │
+└────────────────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────────────────┐
+│  GET  http://localhost:5005/history                                │
+│  ↳ Get all analyses (for history page)                             │
+│  📍 Query params: status, limit, offset                            │
+│  📥 Response: Array of analysis objects                            │
+└────────────────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────────────────┐
+│  GET  http://localhost:5005/analysis/:id                           │
+│  ↳ Get specific analysis by ID                                     │
+│  📥 Response: Single analysis object                               │
+└────────────────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────────────────┐
+│  DELETE http://localhost:5005/analysis/:id                         │
+│  ↳ Delete analysis & video file                                    │
+│  📥 Response: Success message                                      │
+└────────────────────────────────────────────────────────────────────┘
+
+
+═══════════════════════════════════════════════════════════════════════════════
+
+                        ERROR HANDLING FLOW
+
+═══════════════════════════════════════════════════════════════════════════════
+
+REQUEST → Middleware Chain → Route Handler → Response
+            │
+            │ If Error Occurs
+            │
+            ▼
+┌────────────────────────────────────────┐
+│  Error Handler Middleware              │
+│                                        │
+│  1. MulterError?                       │
+│     → File too large                   │
+│     → Invalid file type                │
+│     → Wrong field name                 │
+│                                        │
+│  2. Database Error?                    │
+│     → Connection failed                │
+│     → Query failed                     │
+│                                        │
+│  3. Gemini API Error?                  │
+│     → Invalid API key                  │
+│     → Quota exceeded                   │
+│     → Analysis failed                  │
+│                                        │
+│  4. General Error                      │
+│     → 500 Internal Server Error        │
+│                                        │
+└────────────┬───────────────────────────┘
+             │
+             ▼
+    Send JSON error response
+    {
+      "success": false,
+      "error": "Error message",
+      "message": "User-friendly message"
+    }
+
