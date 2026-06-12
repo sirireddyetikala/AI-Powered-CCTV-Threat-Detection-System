@@ -1,0 +1,251 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Theme Variables - Dark Cyan/Red Security Theme */
+:root {
+  /* Base colors - deep dark security feel */
+  --background: #06080d;
+  --foreground: #e4e8ef;
+  --card: #0c1018;
+  --card-foreground: #e4e8ef;
+  --popover: #0c1018;
+  --popover-foreground: #e4e8ef;
+
+  /* Primary: Cyan-400 - scanning/detection */
+  --primary: #22d3ee;
+  --primary-foreground: #000000;
+
+  /* Secondary: Sky-400 */
+  --secondary: #38bdf8;
+  --secondary-foreground: #000000;
+
+  /* Muted: Gray tones */
+  --muted: rgba(255, 255, 255, 0.05);
+  --muted-foreground: #94a3b8;
+
+  /* Accent: Red-500 - alert/danger */
+  --accent: #ef4444;
+  --accent-foreground: #ffffff;
+
+  /* Destructive */
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+
+  /* Borders and inputs */
+  --border: rgba(34, 211, 238, 0.1);
+  --input: rgba(255, 255, 255, 0.1);
+  --ring: #22d3ee;
+
+  /* Chart colors - cyan/blue/red gradient */
+  --chart-1: #22d3ee;
+  --chart-2: #38bdf8;
+  --chart-3: #06b6d4;
+  --chart-4: #0ea5e9;
+  --chart-5: #ef4444;
+
+  /* Sidebar - dark with cyan accent */
+  --sidebar: #080c14;
+  --sidebar-foreground: #e4e8ef;
+  --sidebar-primary: #22d3ee;
+  --sidebar-primary-foreground: #000000;
+  --sidebar-accent: #38bdf8;
+  --sidebar-accent-foreground: #000000;
+  --sidebar-border: rgba(34, 211, 238, 0.08);
+  --sidebar-ring: #22d3ee;
+
+  /* Typography */
+  --font-sans: "DM Sans", sans-serif;
+  --font-serif: Georgia, serif;
+  --font-mono: Menlo, monospace;
+
+  /* Spacing and radius */
+  --radius: 0.5rem;
+  --spacing: 0.25rem;
+
+  /* Shadows with cyan tint */
+  --shadow-color: rgba(34, 211, 238, 0.15);
+  --shadow-2xs: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-xs: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3), 0 1px 3px 0 rgba(0, 0, 0, 0.2);
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3),
+    0 2px 4px -2px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3),
+    0 4px 6px -4px rgba(0, 0, 0, 0.2);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.3),
+    0 8px 10px -6px rgba(0, 0, 0, 0.2);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+/* Light mode (optional) */
+.light {
+  --background: #f0f4f8;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+  --primary: #0891b2;
+  --primary-foreground: #ffffff;
+  --secondary: #0284c7;
+  --secondary-foreground: #ffffff;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --accent: #dc2626;
+  --accent-foreground: #ffffff;
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --ring: #0891b2;
+  --sidebar: #f8fafc;
+  --sidebar-foreground: #0f172a;
+  --sidebar-primary: #0891b2;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #0284c7;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #e2e8f0;
+  --sidebar-ring: #0891b2;
+}
+
+/* Prevent white background flash and disable overscrolling */
+html {
+  scroll-behavior: smooth;
+  background-color: var(--background);
+  overflow-x: hidden;
+}
+
+html,
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  overscroll-behavior: none;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  width: 100%;
+  font-family: var(--font-sans);
+}
+
+/* Prevent horizontal scroll on mobile */
+* {
+  -webkit-overflow-scrolling: touch;
+  box-sizing: border-box;
+}
+
+body {
+  -webkit-tap-highlight-color: transparent;
+  min-height: 100vh;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: var(--background);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--primary);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--secondary);
+}
+
+#root {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+}
+
+/* Smooth animations */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em var(--primary));
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: var(--muted-foreground);
+}
+
+/* Severity color classes */
+.severity-low {
+  color: #22c55e;
+  background-color: rgba(34, 197, 94, 0.1);
+  border-color: rgba(34, 197, 94, 0.3);
+}
+
+.severity-medium {
+  color: #eab308;
+  background-color: rgba(234, 179, 8, 0.1);
+  border-color: rgba(234, 179, 8, 0.3);
+}
+
+.severity-high {
+  color: #f97316;
+  background-color: rgba(249, 115, 22, 0.1);
+  border-color: rgba(249, 115, 22, 0.3);
+}
+
+.severity-critical {
+  color: #ef4444;
+  background-color: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+/* Scan line animation for security feel */
+@keyframes scanline {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100vh);
+  }
+}
+
+.animate-scanline {
+  animation: scanline 3s linear infinite;
+}

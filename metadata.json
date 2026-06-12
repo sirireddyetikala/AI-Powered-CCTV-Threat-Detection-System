@@ -1,0 +1,5 @@
+{
+  "name": "NrityaAI Analyzer",
+  "description": "An AI-powered video analysis tool that identifies Indian Classical Dance Mudras and expressions (Abhinaya) from short video clips using Gemini 2.0 Flash.",
+  "requestFramePermissions": []
+}
